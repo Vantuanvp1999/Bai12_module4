@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <title>List Smartphone</title>
+  <!-- CSS để giao diện gọn gàng hơn -->
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    h1 { color: #333; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    input[type="text"] { width: 95%; padding: 8px; }
+    input[type="submit"], button, input[type="button"] { padding: 8px 15px; cursor: pointer; border-radius: 4px; border: none; margin-right: 5px; }
+    .btn-action { background-color: #007bff; color: white; }
+    .btn-create { background-color: #28a745; color: white; }
+    .btn-delete { background-color: #dc3545; color: white; }
+    .btn-cancel { background-color: #6c757d; color: white; }
+    #div-btn { margin-bottom: 20px; }
+    form { border: 1px solid #ccc; padding: 20px; border-radius: 5px; background-color: #fafafa; }
+  </style>
+</head>
+<body>
+
+<!-- ============== PHẦN GIAO DIỆN HTML ============== -->
+
+<!-- 1. Form để TẠO MỚI smartphone (giữ nguyên, ẩn ban đầu) -->
+<form id="add-smartphone" style="display:none;">
+  <h1>Form Create</h1>
+  <table>
+    <tr>
+      <td><label for="producer">Producer:</label></td>
+      <td><input type="text" id="producer" placeholder="Producer"></td>
+    </tr>
+    <tr>
+      <td><label for="model">Model:</label></td>
+      <td><input type="text" id="model" placeholder="Model"></td>
+    </tr>
+    <tr>
+      <td><label for="price">Price:</label></td>
+      <td><input type="number" id="price" placeholder="Price"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td><input type="submit" class="btn-action" value="Add" onclick="addNewSmartPhone()"></td>
+    </tr>
+  </table>
+</form>
+
+<!-- 2. Form để CẬP NHẬT smartphone (form mới, ẩn ban đầu) -->
+<form id="update-smartphone" style="display:none;">
+  <h1>Form Update</h1>
+  <input type="hidden" id="update-id"> <!-- Trường ẩn để lưu ID -->
+  <table>
+    <tr>
+      <td><label for="update-producer">Producer:</label></td>
+      <td><input type="text" id="update-producer" placeholder="Producer"></td>
+    </tr>
+    <tr>
+      <td><label for="update-model">Model:</label></td>
+      <td><input type="text" id="update-model" placeholder="Model"></td>
+    </tr>
+    <tr>
+      <td><label for="update-price">Price:</label></td>
+      <td><input type="number" id="update-price" placeholder="Price"></td>
+    </tr>
+    <tr>
+      <td></td>
+      <td>
+        <input type="submit" class="btn-action" value="Save" onclick="updateSmartphone()">
+        <input type="button" class="btn-cancel" value="Cancel" onclick="successHandler()"> <!-- Nút hủy quay về danh sách -->
+      </td>
+    </tr>
+  </table>
+</form>
+
+
+<!-- 3. Các nút điều hướng và tiêu đề chính -->
+<h1 id="title">List smartphone</h1>
+<div id="div-btn">
+  <button onclick="successHandler()" id="display" class="btn-action">Display list smartphone</button>
+  <button onclick="displayFormCreate()" id="display-create" class="btn-create">Create new smartphone</button>
+  <button onclick="displayFormUpdate()" id="display-update" class="btn-create">Update smartphone</button>
+</div>
+
+<!-- 4. Vùng để hiển thị danh sách smartphone -->
+<div id="smartphoneList"></div>
+
+
+<!-- ============== PHẦN JAVASCRIPT ============== -->
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+  // Hàm được gọi ngay khi trang tải xong để hiển thị danh sách ban đầu
+  $(document).ready(function () {
+    successHandler();
+  });
+
+  // --- CÁC HÀM XỬ LÝ SỰ KIỆN ---
+
+  // 1. CREATE: Gửi dữ liệu tạo mới lên server
+  function addNewSmartPhone() {
+    // Lấy dữ liệu từ form
+    let producer = $('#producer').val();
+    let model = $('#model').val();
+    let price = $('#price').val();
+    let newSmartphone = {
+      producer: producer,
+      model: model,
+      price: price
+    };
+    // Gọi AJAX POST
+    $.ajax({
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      type: "POST",
+      data: JSON.stringify(newSmartphone),
+      url: "http://localhost:8080/api/smartphones",
+      success: successHandler // Sau khi tạo thành công, gọi lại hàm để làm mới danh sách
+    });
+    // Chặn sự kiện mặc định của form
+    event.preventDefault();
+  }
+
+  // 2. DELETE: Gửi yêu cầu xóa
+  function deleteSmartphone(id) {
+    $.ajax({
+      type: "DELETE",
+      url: `http://localhost:8080/api/smartphones/${id}`,
+      success: successHandler // Sau khi xóa thành công, làm mới danh sách
+    });
+  }
+
+  // 3. UPDATE: Gửi dữ liệu cập nhật lên server (Hàm mới)
+  function updateSmartphone() {
+    // Lấy dữ liệu từ form cập nhật
+    let id = $('#update-id').val();
+    let producer = $('#update-producer').val();
+    let model = $('#update-model').val();
+    let price = $('#update-price').val();
+    let updatedSmartphone = {
+      id: id,
+      producer: producer,
+      model: model,
+      price: price
+    };
+    // Gọi AJAX PUT
+    $.ajax({
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      type: "PUT",
+      data: JSON.stringify(updatedSmartphone),
+      url: `http://localhost:8080/api/smartphones/${id}`,
+      success: successHandler // Sau khi cập nhật, làm mới danh sách
+    });
+    // Chặn sự kiện mặc định của form
+    event.preventDefault();
+  }
+
+
+  // --- CÁC HÀM XỬ LÝ GIAO DIỆN ---
+
+  // Hàm trung tâm: Lấy danh sách và hiển thị, đồng thời reset giao diện
+  function successHandler() {
+    $.ajax({
+      type: "GET",
+      url: "http://localhost:8080/api/smartphones",
+      success: function (data) {
+        // Tạo bảng HTML từ dữ liệu
+        let content = `
+                    <table id="display-list" border="1">
+                        <tr>
+                            <th>Producer</th>
+                            <th>Model</th>
+                            <th>Price</th>
+                            <th>Edit</th>
+                            <th>Delete</th>
+                        </tr>`;
+        for (let i = 0; i < data.length; i++) {
+          content += getSmartphoneRow(data[i]);
+        }
+        content += "</table>";
+        // Cập nhật giao diện
+        $('#smartphoneList').html(content);
+        // Reset trạng thái hiển thị của các thành phần
+        $('#smartphoneList').show();
+        $('#add-smartphone').hide();
+        $('#update-smartphone').hide(); // Ẩn cả form update
+        $('#display-create').show();
+        $('#title').show();
+      }
+    });
+  }
+
+  // Hiển thị form tạo mới
+  function displayFormCreate() {
+    $('#smartphoneList').hide();
+    $('#update-smartphone').hide(); // Ẩn form update nếu đang mở
+    $('#add-smartphone').show();
+    $('#display-create').hide();
+    $('#title').hide();
+  }
+
+  // Hiển thị form cập nhật với dữ liệu đã có (Hàm mới)
+  function displayFormUpdate(id, producer, model, price) {
+    // Điền dữ liệu vào form cập nhật
+    $('#update-id').val(id);
+    $('#update-producer').val(producer);
+    $('#update-model').val(model);
+    $('#update-price').val(price);
+
+    // Hiển thị/ẩn các thành phần
+    $('#smartphoneList').hide();
+    $('#add-smartphone').hide();
+    $('#update-smartphone').show();
+    $('#display-create').hide();
+    $('#title').hide();
+  }
+
+  // Tạo HTML cho một hàng của bảng (cập nhật để thêm nút Edit)
+  function getSmartphoneRow(smartphone) {
+    // Chú ý cách truyền tham số vào hàm displayFormUpdate, các chuỗi phải nằm trong dấu nháy ''
+    return `<tr>
+                    <td>${smartphone.producer}</td>
+                    <td>${smartphone.model}</td>
+                    <td>${smartphone.price}</td>
+                    <td><button class="btn-action" onclick="displayFormUpdate(${smartphone.id}, '${smartphone.producer}', '${smartphone.model}', ${smartphone.price})">Edit</button></td>
+                    <td><button class="btn-delete" onclick="deleteSmartphone(${smartphone.id})">Delete</button></td>
+                </tr>`;
+  }
+
+</script>
+</body>
+</html>
+
+    

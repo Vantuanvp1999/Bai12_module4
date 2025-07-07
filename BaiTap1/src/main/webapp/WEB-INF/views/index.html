@@ -1,0 +1,33 @@
+
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Blog AJAX (JPA - Modern UI)</title>
+  <!-- Nhúng file CSS đã được thiết kế lại -->
+  <link rel="stylesheet" th:href="@{/WEB-INF/views/style.css}">
+</head>
+<body>
+
+<div class="container">
+  <h1>Blog AJAX Hiện Đại</h1>
+
+  <!-- Form tìm kiếm -->
+  <form id="searchForm" class="search-form">
+    <input type="text" id="searchInput" placeholder="Tìm kiếm bài viết..." autocomplete="off">
+    <button type="submit">Tìm</button>
+  </form>
+
+  <!-- Container nơi nội dung động sẽ được nạp vào -->
+  <div id="post-list-container">
+    <!-- Nội dung ban đầu sẽ được nạp bởi JS khi trang tải xong -->
+  </div>
+</div>
+
+<!-- Nhúng file JavaScript đã được viết lại bằng Vanilla JS -->
+<script th:src="@{/WEB-INF/views/blog.js}"></script>
+
+</body>
+</html>
+
+    
