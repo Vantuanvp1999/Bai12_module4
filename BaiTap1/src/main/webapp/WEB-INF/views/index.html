@@ -1,33 +1,81 @@
-
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" >
 <head>
   <meta charset="UTF-8">
-  <title>Blog AJAX (JPA - Modern UI)</title>
-  <!-- Nhúng file CSS đã được thiết kế lại -->
-  <link rel="stylesheet" th:href="@{/WEB-INF/views/style.css}">
+  <title>Title</title>
+  <link rel="stylesheet" href="/webjars/bootstrap/5.1.3/css/bootstrap.min.css"/>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>
+    let currentPage = 0;
+    let currentKeyword = "";
+
+    function loadPosts(reset = false) {
+      $.ajax({
+        url: '/api/posts',
+        method: 'GET',
+        data: {
+          keyword: currentKeyword,
+          page: currentPage
+        },
+        success: function (posts) {
+          if (reset) $('#post-list').html('');
+          if (posts.length === 0 && currentPage === 0) {
+            $('#post-list').html('<p>Không tìm thấy bài viết nào.</p>');
+            $('#load-more').hide();
+            return;
+          }
+
+          posts.forEach(function (post) {
+            $('#post-list').append(`
+            <div class="card mb-2">
+              <div class="card-body">
+                <h5>${post.title}</h5>
+                <p>${post.content}</p>
+              </div>
+            </div>
+          `);
+          });
+
+          if (posts.length < 20) {
+            $('#load-more').hide();
+          } else {
+            $('#load-more').show();
+          }
+
+          currentPage++;
+        }
+      });
+    }
+
+    $(document).ready(function () {
+      // Load lần đầu
+      loadPosts();
+
+      // Tìm kiếm
+      $('#search-form').submit(function (e) {
+        e.preventDefault();
+        currentKeyword = $('#search-keyword').val().trim();
+        currentPage = 0;
+        loadPosts(true);
+      });
+
+      // Tải thêm
+      $('#load-more').click(function () {
+        loadPosts();
+      });
+    });
+  </script>
 </head>
 <body>
-
-<div class="container">
-  <h1>Blog AJAX Hiện Đại</h1>
-
-  <!-- Form tìm kiếm -->
-  <form id="searchForm" class="search-form">
-    <input type="text" id="searchInput" placeholder="Tìm kiếm bài viết..." autocomplete="off">
-    <button type="submit">Tìm</button>
+<div class="container mt-3">
+  <form id="search-form">
+    <input type="text" id="search-keyword" class="form-control" placeholder="Tìm kiếm bài viết...">
+    <button class="btn btn-primary mt-2">Tìm kiếm</button>
   </form>
 
-  <!-- Container nơi nội dung động sẽ được nạp vào -->
-  <div id="post-list-container">
-    <!-- Nội dung ban đầu sẽ được nạp bởi JS khi trang tải xong -->
-  </div>
+  <div id="post-list" class="mt-4"></div>
+
+  <button id="load-more" class="btn btn-secondary mt-3">Tải thêm</button>
 </div>
-
-<!-- Nhúng file JavaScript đã được viết lại bằng Vanilla JS -->
-<script th:src="@{/WEB-INF/views/blog.js}"></script>
-
 </body>
 </html>
-
-    

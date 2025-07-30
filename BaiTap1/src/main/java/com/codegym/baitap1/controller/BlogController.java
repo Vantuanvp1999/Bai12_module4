@@ -12,43 +12,36 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @Controller
-@RequestMapping("/blogs")
+@RequestMapping("/api")
 public class BlogController {
     private static final int PAGE_SIZE = 10; // Giảm xuống 10 để dễ thấy phân trang hơn
 
     @Autowired
     private BlogService blogService;
 
-    // 1. Hiển thị trang chính
     @GetMapping("")
-    public String home(Model model) {
-        // Lấy trang đầu tiên, sắp xếp theo ID giảm dần (bài mới nhất lên đầu)
-        Pageable pageable = PageRequest.of(0, PAGE_SIZE, Sort.by("id").descending());
-        Page<Post> postPage = blogService.findAll(pageable);
-        model.addAttribute("postPage", postPage);
+    public String home() {
         return "index";
     }
+    // 1. Hiển thị trang chính
+    @GetMapping("/posts")
+    @ResponseBody
+    public List<Post> searchAndPaginate(
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "0") int page) {
 
-    // 2. API cho cả TÌM KIẾM và TẢI THÊM
-    //    Sử dụng chung một endpoint cho cả hai chức năng để code gọn hơn
-    @GetMapping("/api/posts")
-    public String getPostsFragment(
-            @RequestParam(required = false, defaultValue = "") String keyword,
-            Pageable pageable,
-            Model model) {
-
-        Page<Post> postPage;
-        // Nếu có từ khóa, thực hiện tìm kiếm. Nếu không, lấy tất cả.
-        if (!keyword.isEmpty()) {
-            postPage = blogService.searchByTitle(keyword, pageable);
+        Pageable pageable = PageRequest.of(page, 20);
+        if (keyword == null || keyword.isEmpty()) {
+            return blogService.findAll(pageable).getContent();
         } else {
-            postPage = blogService.findAll(pageable);
+            return blogService.searchByTitle(keyword, pageable).getContent();
         }
-
-        model.addAttribute("postPage", postPage);
-        // Trả về fragment, không phải cả trang
-        return "fragments/post-list-fragment :: postList";
     }
+
+
 }
