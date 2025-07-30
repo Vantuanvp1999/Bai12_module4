@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@CrossOrigin("*")
+@CrossOrigin(origins = "*")
 @RequestMapping("/api/smartphones")
 public class SmartphoneController {
     @Autowired
@@ -24,6 +24,15 @@ public class SmartphoneController {
     @PostMapping
     public ResponseEntity<Smartphone> createSmartphone(@RequestBody Smartphone smartphone) {
         return new ResponseEntity<>(smartphoneService.save(smartphone), HttpStatus.CREATED);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<Smartphone> updateSmartphone(@PathVariable long id, @RequestBody Smartphone smartphone) {
+        Optional<Smartphone> existing = smartphoneService.findById(id);
+        if (!existing.isPresent()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        smartphone.setId(id);
+        return new ResponseEntity<>(smartphoneService.save(smartphone), HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
