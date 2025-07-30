@@ -35,7 +35,7 @@ public class BlogController {
             @RequestParam(defaultValue = "") String keyword,
             @RequestParam(defaultValue = "0") int page) {
 
-        Pageable pageable = PageRequest.of(page, 20);
+        Pageable pageable = PageRequest.of(page, 2);
         if (keyword == null || keyword.isEmpty()) {
             return blogService.findAll(pageable).getContent();
         } else {
